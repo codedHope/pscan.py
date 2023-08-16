@@ -2,42 +2,36 @@ import socket
 from argparse import ArgumentParser
 from datetime import datetime as dt
 
-#implentation of argparse for adding flags and parsing commandline arguments 
-parser = ArgumentParser()
-parser.add_argument("-H", "--host", action="store", dest="ip")
- 
-args = parser.parse_args()
-ip=args.ip
+def tcp_connect_scan(ip):
+    try:
+        for port in range(1,65535):
+            s=socket.socket(socket.AF_INET,socket.SOCK_STREAM) #AF_INET=IPV4 SOCK_STREAM=TCP
+            socket.setdefaulttimeout(1)
+            result=s.connect_ex((ip,port))
 
-#formating fix for date and time display
-dt_now=dt.now()
-dt_format=dt_now.strftime("%m-%d-%Y %H:%M:%S")
+            if result==0:
+                print(f"Port {port} is open")
+            s.close()
 
-#Define target
-target=socket.gethostbyname(args.ip) #convert host to ip
+    except keyboardInterrupt:
+        print("\nExiting program")
+        sys.exit()
+    except socket.gaierror:
+        print("Could not resolve hostname")
+        sys.exit()
+    except socket.error:
+        print("could not connect to server, check connection")
+        sys.exit()
 
-#banner
-print(f"\nStarting scanner.py at {dt_format}")
-print(f"Scan report for ({target})\n")
+def main():
+    #implementation of argparse for adding flags and parsing args
+    parser=ArgumentParser("Usage: python3 pscan.py -H <Target Host or IP>")
+    parser.add_argument("-H","--host",action="store",dest="ip",help="target ip or hostname",required=True)
+    args=parser.parse_args()
 
-try:
-    for port in range(1,65535):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        socket.setdefaulttimeout(1)
-        result=s.connect_ex((target,port))
+    ip=args.ip
+    tcp_connect_scan(ip)
 
-        if result==0:
-            print(f"Port {port} is open")
-        s.close()
-
-except keyboardInterrupt:
-    print("\nExiting program.")
-    sys.exit()
-except socket.gaierror:
-    print("Hostname could not be resolved.")
-    sys.exit()
-except socket.error:
-    print("Could not connect to server")
-    sys.exit()
-
-
+#invoking the main function
+if __name__ == "__main__":
+    main()
